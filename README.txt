@@ -2,7 +2,7 @@ Websocket Terminal
 
     Run commands through websocket
 
-Requirement
+Requirements
 
     golang - compile the code
     expect - handle processes
@@ -23,7 +23,6 @@ Usage
     > {"type":"exec", "data":"echo hello world"}
     < {"type":"stdout","data":"hello world\r\n"}
     < {"type":"exit","data":{"code":0,"message":""}}
-    websocket: close 1000 (normal)
 
     # stderr handle
     $ ws ws://localhost:9300/ws
@@ -31,7 +30,6 @@ Usage
     < {"type":"stderr","data":"curl: try 'curl -"}
     < {"type":"stderr","data":"-help' or 'curl --manual' for more information\n"}
     < {"type":"exit","data":{"code":2,"message":"exit status 2"}}
-    websocket: close 1000 (normal)
 
     # stop process
     $ ws ws://localhost:9300/ws
@@ -42,7 +40,6 @@ Usage
     # send stop message
     > {"type":"stop"}
     < {"type":"exit","data":{"code":130,"message":"exit status 130"}}
-    websocket: close 1000 (normal)
 
 Request Messages
 

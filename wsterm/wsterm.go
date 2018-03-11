@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log"
 	"net/http"
 
@@ -8,8 +9,14 @@ import (
 )
 
 func main() {
-	var address = "localhost:9300"
+	port := flag.String("port", "9300", "")
+	host := flag.String("host", "localhost", "")
+	flag.Parse()
+	var address = *host + ":" + *port
 	log.Printf("websocket url ws://%s/ws\n", address)
 	http.Handle("/ws", wsterm.Handler)
-	http.ListenAndServe(address, nil)
+	err := http.ListenAndServe(address, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
 }

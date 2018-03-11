@@ -26,6 +26,7 @@ Usage
     websocket: close 1000 (normal)
 
     # stderr handle
+    $ ws ws://localhost:9300/ws
     > {"type":"exec","data":"curl"}
     < {"type":"stderr","data":"curl: try 'curl -"}
     < {"type":"stderr","data":"-help' or 'curl --manual' for more information\n"}
@@ -42,7 +43,6 @@ Usage
     > {"type":"stop"}
     < {"type":"exit","data":{"code":130,"message":"exit status 130"}}
     websocket: close 1000 (normal)
-
 
 Request Messages
 

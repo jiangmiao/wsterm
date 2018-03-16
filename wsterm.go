@@ -74,7 +74,10 @@ func WSTerm(conn *websocket.Conn) {
 	var name string
 	var stdout, stderr *os.File
 	var once sync.Once
+	var mutex sync.Mutex
 	var done = func(e Error) int {
+		mutex.Lock()
+		defer mutex.Unlock()
 		once.Do(func() {
 			var message string
 			if err == nil {
@@ -97,11 +100,14 @@ func WSTerm(conn *websocket.Conn) {
 			if stderr != nil {
 				stderr.Close()
 			}
+			if cmd != nil && cmd.Process != nil {
+				cmd.Process.Signal(syscall.SIGTERM)
+				cmd = nil
+			}
 			os.Remove(name)
 			os.Remove(name + ".stdout")
 			os.Remove(name + ".stderr")
 			os.Remove(name + ".redirect")
-			cmd = nil
 		})
 		return e.Code
 	}
@@ -154,6 +160,7 @@ func WSTerm(conn *websocket.Conn) {
 				// There are several situations
 				//   Nested subprocess
 				//   Sudoed subprocess
+				mutex.Lock()
 				cmd = exec.Command("/usr/bin/expect")
 				go func() {
 					stdout, err = os.Open(name + ".stdout")
@@ -176,7 +183,12 @@ func WSTerm(conn *websocket.Conn) {
                     lassign [wait] pid spawnid os_error_flag value
                     exit $value
                 `, redirect))
-				err = cmd.Run()
+				err = cmd.Start()
+				mutex.Unlock()
+				if err != nil {
+					return done(Error{-1, err.Error()})
+				}
+				err = cmd.Wait()
 				switch e := err.(type) {
 				case *exec.ExitError:
 					return done(Error{e.Sys().(syscall.WaitStatus).ExitStatus(), err.Error()})
@@ -184,8 +196,10 @@ func WSTerm(conn *websocket.Conn) {
 					return done(ERR_OK)
 				}
 			case "stop":
+				mutex.Lock()
+				defer mutex.Unlock()
 				if cmd != nil && cmd.Process != nil {
-					cmd.Process.Signal(syscall.SIGINT)
+					cmd.Process.Signal(syscall.SIGTERM)
 					return -1
 				} else {
 					return done(ERR_PROCESS_IS_NOT_FOUND)

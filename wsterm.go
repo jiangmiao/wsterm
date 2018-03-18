@@ -76,9 +76,9 @@ func WSTerm(conn *websocket.Conn) {
 	var once sync.Once
 	var mutex sync.Mutex
 	var done = func(e Error) int {
-		mutex.Lock()
-		defer mutex.Unlock()
 		once.Do(func() {
+			mutex.Lock()
+			defer mutex.Unlock()
 			var message string
 			if err == nil {
 				message = e.Message
@@ -189,6 +189,9 @@ func WSTerm(conn *websocket.Conn) {
 					return done(Error{-1, err.Error()})
 				}
 				err = cmd.Wait()
+				mutex.Lock()
+				cmd = nil
+				mutex.Unlock()
 				switch e := err.(type) {
 				case *exec.ExitError:
 					return done(Error{e.Sys().(syscall.WaitStatus).ExitStatus(), err.Error()})
